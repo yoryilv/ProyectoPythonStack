@@ -11,6 +11,9 @@ class ProyectoPythonStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        # Definir el contexto del bootstrapVersion
+        self.node.set_context("@aws-cdk/core:bootstrapVersion", 6)
+
         # Buscar la VPC por defecto
         vpc = ec2.Vpc.from_lookup(self, "DefaultVPC", is_default=True)
 
@@ -18,7 +21,6 @@ class ProyectoPythonStack(Stack):
         security_group = ec2.SecurityGroup.from_security_group_id(
             self, "SG", "sg-0a89f55892deaf213"
         )
-
         # Utilizar el Role IAM existente (LabRole)
         lab_role = iam.Role.from_role_arn(
             self, "LabRole", role_arn="arn:aws:iam::391666133763:role/LabRole"
@@ -30,8 +32,8 @@ class ProyectoPythonStack(Stack):
             machine_image=ec2.MachineImage.latest_amazon_linux2(),
             vpc=vpc,
             key_pair=ec2.KeyPair.from_key_pair_name(self, "MyKeyPair", "vockey"),
-            security_group=security_group,
-            role=lab_role
+            security_group=security_group,  # Asigna el security group existente
+            role=lab_role  # Asigna el rol LabRole a la instancia
         )
 
         # Referenciar un bucket S3 existente
@@ -50,7 +52,7 @@ class ProyectoPythonStack(Stack):
         )
         instance.add_user_data(user_data.render())
 
-        # Agregar permisos para S3 al rol IAM
+        # Agregar permisos para S3
         instance.role.add_managed_policy(
             iam.ManagedPolicy.from_aws_managed_policy_name("AmazonS3FullAccess")
         )
